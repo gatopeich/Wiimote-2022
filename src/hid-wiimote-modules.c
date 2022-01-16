@@ -45,7 +45,7 @@
  * It uses the shared input device.
  */
 
-static const __u16 wiimod_keys_map[] = {
+static __u16 wiimod_keys_map[] = {
 	KEY_LEFT,	/* WIIPROTO_KEY_LEFT */
 	KEY_RIGHT,	/* WIIPROTO_KEY_RIGHT */
 	KEY_UP,		/* WIIPROTO_KEY_UP */
@@ -58,6 +58,32 @@ static const __u16 wiimod_keys_map[] = {
 	BTN_B,		/* WIIPROTO_KEY_B */
 	BTN_MODE,	/* WIIPROTO_KEY_HOME */
 };
+
+static int wiimod_keys_probe(const struct wiimod_ops *ops,
+			     struct wiimote_data *wdata)
+{
+	unsigned int i;
+
+	if (wiimote_gamepad) {
+		wiimod_keys_map[WIIPROTO_KEY_LEFT] = BTN_DPAD_LEFT;
+		wiimod_keys_map[WIIPROTO_KEY_RIGHT] = BTN_DPAD_RIGHT;
+		wiimod_keys_map[WIIPROTO_KEY_UP] = BTN_DPAD_UP;
+		wiimod_keys_map[WIIPROTO_KEY_DOWN] = BTN_DPAD_DOWN;
+		wiimod_keys_map[WIIPROTO_KEY_PLUS] = BTN_EAST;
+		wiimod_keys_map[WIIPROTO_KEY_MINUS] = BTN_WEST;
+		wiimod_keys_map[WIIPROTO_KEY_ONE] = BTN_1;
+		wiimod_keys_map[WIIPROTO_KEY_TWO] = BTN_2;
+		wiimod_keys_map[WIIPROTO_KEY_A] = BTN_A;
+		wiimod_keys_map[WIIPROTO_KEY_B] = BTN_TR;
+		wiimod_keys_map[WIIPROTO_KEY_HOME] = BTN_MODE;
+	}
+
+	set_bit(EV_KEY, wdata->input->evbit);
+	for (i = 0; i < WIIPROTO_KEY_COUNT; ++i)
+		set_bit(wiimod_keys_map[i], wdata->input->keybit);
+
+	return 0;
+}
 
 static void wiimod_keys_in_keys(struct wiimote_data *wdata, const __u8 *keys)
 {
@@ -84,18 +110,6 @@ static void wiimod_keys_in_keys(struct wiimote_data *wdata, const __u8 *keys)
 	input_report_key(wdata->input, wiimod_keys_map[WIIPROTO_KEY_HOME],
 							!!(keys[1] & 0x80));
 	input_sync(wdata->input);
-}
-
-static int wiimod_keys_probe(const struct wiimod_ops *ops,
-			     struct wiimote_data *wdata)
-{
-	unsigned int i;
-
-	set_bit(EV_KEY, wdata->input->evbit);
-	for (i = 0; i < WIIPROTO_KEY_COUNT; ++i)
-		set_bit(wiimod_keys_map[i], wdata->input->keybit);
-
-	return 0;
 }
 
 static const struct wiimod_ops wiimod_keys = {
@@ -483,19 +497,26 @@ static int wiimod_accel_probe(const struct wiimod_ops *ops,
 {
 	int ret;
 
-	wdata->accel = input_allocate_device();
-	if (!wdata->accel)
-		return -ENOMEM;
+	if (wiimote_gamepad) {
+		if (wdata->accel == wdata->input)
+			return 0;
+		wdata->accel = wdata->input;
+		wiiproto_req_accel(wdata, true);
+	} else {
+		wdata->accel = input_allocate_device();
+		if (!wdata->accel)
+			return -ENOMEM;
 
-	input_set_drvdata(wdata->accel, wdata);
-	wdata->accel->open = wiimod_accel_open;
-	wdata->accel->close = wiimod_accel_close;
-	wdata->accel->dev.parent = &wdata->hdev->dev;
-	wdata->accel->id.bustype = wdata->hdev->bus;
-	wdata->accel->id.vendor = wdata->hdev->vendor;
-	wdata->accel->id.product = wdata->hdev->product;
-	wdata->accel->id.version = wdata->hdev->version;
-	wdata->accel->name = WIIMOTE_NAME " Accelerometer";
+		input_set_drvdata(wdata->accel, wdata);
+		wdata->accel->open = wiimod_accel_open;
+		wdata->accel->close = wiimod_accel_close;
+		wdata->accel->dev.parent = &wdata->hdev->dev;
+		wdata->accel->id.bustype = wdata->hdev->bus;
+		wdata->accel->id.vendor = wdata->hdev->vendor;
+		wdata->accel->id.product = wdata->hdev->product;
+		wdata->accel->id.version = wdata->hdev->version;
+		wdata->accel->name = WIIMOTE_NAME " Accelerometer";
+	}
 
 	set_bit(EV_ABS, wdata->accel->evbit);
 	set_bit(ABS_RX, wdata->accel->absbit);
@@ -505,12 +526,14 @@ static int wiimod_accel_probe(const struct wiimod_ops *ops,
 	input_set_abs_params(wdata->accel, ABS_RY, -500, 500, 2, 4);
 	input_set_abs_params(wdata->accel, ABS_RZ, -500, 500, 2, 4);
 
-	ret = input_register_device(wdata->accel);
-	if (ret) {
-		hid_err(wdata->hdev, "cannot register input device\n");
-		goto err_free;
+	if (!wiimote_gamepad)
+	{
+		ret = input_register_device(wdata->accel);
+		if (ret) {
+			hid_err(wdata->hdev, "cannot register input device\n");
+			goto err_free;
+		}
 	}
-
 	return 0;
 
 err_free:
@@ -522,7 +545,7 @@ err_free:
 static void wiimod_accel_remove(const struct wiimod_ops *ops,
 				struct wiimote_data *wdata)
 {
-	if (!wdata->accel)
+	if (wiimote_gamepad || !wdata->accel)
 		return;
 
 	input_unregister_device(wdata->accel);
@@ -812,7 +835,7 @@ enum wiimod_nunchuk_keys {
 	WIIMOD_NUNCHUK_KEY_NUM,
 };
 
-static const __u16 wiimod_nunchuk_map[] = {
+static __u16 wiimod_nunchuk_map[] = {
 	BTN_C,		/* WIIMOD_NUNCHUK_KEY_C */
 	BTN_Z,		/* WIIMOD_NUNCHUK_KEY_Z */
 };
@@ -875,12 +898,14 @@ static void wiimod_nunchuk_in_ext(struct wiimote_data *wdata, const __u8 *ext)
 	y -= 0x200;
 	z -= 0x200;
 
-	input_report_abs(wdata->extension.input, ABS_HAT0X, bx);
-	input_report_abs(wdata->extension.input, ABS_HAT0Y, by);
+	// Report stick in the first 2 axis ~ main control in standard games
+	input_report_abs(wdata->extension.input, wiimote_gamepad?ABS_X:ABS_HAT0X, bx);
+	input_report_abs(wdata->extension.input, wiimote_gamepad?ABS_Y:ABS_HAT0Y, by);
 
-	input_report_abs(wdata->extension.input, ABS_RX, x);
-	input_report_abs(wdata->extension.input, ABS_RY, y);
-	input_report_abs(wdata->extension.input, ABS_RZ, z);
+	// Report X-Y accelerometer as "HAT0", and vertical => main Z axis to use for jump/fly
+	input_report_abs(wdata->extension.input, wiimote_gamepad?ABS_HAT0X:ABS_RX, x);
+	input_report_abs(wdata->extension.input, wiimote_gamepad?ABS_HAT0Y:ABS_RY, y);
+	input_report_abs(wdata->extension.input, wiimote_gamepad?ABS_Z:ABS_RZ, z);
 
 	if (wdata->state.flags & WIIPROTO_FLAG_MP_ACTIVE) {
 		input_report_key(wdata->extension.input,
@@ -930,45 +955,59 @@ static int wiimod_nunchuk_probe(const struct wiimod_ops *ops,
 {
 	int ret, i;
 
-	wdata->extension.input = input_allocate_device();
-	if (!wdata->extension.input)
-		return -ENOMEM;
+	if (wiimote_gamepad) {
+		if (wdata->extension.input == wdata->input) {
+			// Already initialized, Nunchuck must be plugged-in
+			wiimod_nunchuk_open(wdata->input);
+			return 0;
+		}
+		wdata->extension.input = wdata->input;
+	} else {
+		wdata->extension.input = input_allocate_device();
+		if (!wdata->extension.input)
+			return -ENOMEM;
 
-	input_set_drvdata(wdata->extension.input, wdata);
-	wdata->extension.input->open = wiimod_nunchuk_open;
-	wdata->extension.input->close = wiimod_nunchuk_close;
-	wdata->extension.input->dev.parent = &wdata->hdev->dev;
-	wdata->extension.input->id.bustype = wdata->hdev->bus;
-	wdata->extension.input->id.vendor = wdata->hdev->vendor;
-	wdata->extension.input->id.product = wdata->hdev->product;
-	wdata->extension.input->id.version = wdata->hdev->version;
-	wdata->extension.input->name = WIIMOTE_NAME " Nunchuk";
+		input_set_drvdata(wdata->extension.input, wdata);
+		wdata->extension.input->open = wiimod_nunchuk_open;
+		wdata->extension.input->close = wiimod_nunchuk_close;
+		wdata->extension.input->dev.parent = &wdata->hdev->dev;
+		wdata->extension.input->id.bustype = wdata->hdev->bus;
+		wdata->extension.input->id.vendor = wdata->hdev->vendor;
+		wdata->extension.input->id.product = wdata->hdev->product;
+		wdata->extension.input->id.version = wdata->hdev->version;
+		wdata->extension.input->name = WIIMOTE_NAME " Nunchuk";
+	}
 
 	set_bit(EV_KEY, wdata->extension.input->evbit);
 	for (i = 0; i < WIIMOD_NUNCHUK_KEY_NUM; ++i)
 		set_bit(wiimod_nunchuk_map[i],
 			wdata->extension.input->keybit);
 
+	// Announce as a gamepad
+	// set_bit(BTN_GAMEPAD, wdata->extension.input->keybit);
+
 	set_bit(EV_ABS, wdata->extension.input->evbit);
 	set_bit(ABS_HAT0X, wdata->extension.input->absbit);
 	set_bit(ABS_HAT0Y, wdata->extension.input->absbit);
+	set_bit(wiimote_gamepad?ABS_X:ABS_RX, wdata->extension.input->absbit);
+	set_bit(wiimote_gamepad?ABS_Y:ABS_RY, wdata->extension.input->absbit);
+	set_bit(wiimote_gamepad?ABS_Z:ABS_RZ, wdata->extension.input->absbit);
 	input_set_abs_params(wdata->extension.input,
-			     ABS_HAT0X, -120, 120, 2, 4);
+			     wiimote_gamepad?ABS_X:ABS_HAT0X, -120, 120, 2, 4);
 	input_set_abs_params(wdata->extension.input,
-			     ABS_HAT0Y, -120, 120, 2, 4);
-	set_bit(ABS_RX, wdata->extension.input->absbit);
-	set_bit(ABS_RY, wdata->extension.input->absbit);
-	set_bit(ABS_RZ, wdata->extension.input->absbit);
+			     wiimote_gamepad?ABS_Y:ABS_HAT0Y, -120, 120, 2, 4);
 	input_set_abs_params(wdata->extension.input,
-			     ABS_RX, -500, 500, 2, 4);
+			     wiimote_gamepad?ABS_HAT0X:ABS_RX, -500, 500, 2, 4);
 	input_set_abs_params(wdata->extension.input,
-			     ABS_RY, -500, 500, 2, 4);
+			     wiimote_gamepad?ABS_HAT0Y:ABS_RY, -500, 500, 2, 4);
 	input_set_abs_params(wdata->extension.input,
-			     ABS_RZ, -500, 500, 2, 4);
+			     wiimote_gamepad?ABS_Z:ABS_RZ, -500, 500, 2, 4);
 
-	ret = input_register_device(wdata->extension.input);
-	if (ret)
-		goto err_free;
+	if (!wiimote_gamepad) {
+		ret = input_register_device(wdata->extension.input);
+		if (ret)
+			goto err_free;
+	}
 
 	return 0;
 
@@ -981,6 +1020,10 @@ err_free:
 static void wiimod_nunchuk_remove(const struct wiimod_ops *ops,
 				  struct wiimote_data *wdata)
 {
+	if (wiimote_gamepad) {
+		wiimod_nunchuk_close(wdata->input);
+		return;
+	}
 	if (!wdata->extension.input)
 		return;
 

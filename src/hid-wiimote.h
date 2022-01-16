@@ -163,6 +163,7 @@ struct wiimote_data {
 };
 
 extern bool wiimote_dpad_as_analog;
+extern bool wiimote_gamepad;
 
 /* wiimote modules */
 
