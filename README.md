@@ -1,31 +1,36 @@
 # Wiimote-2022
 
-Provides a Wiimote driver directly usable as a game controller.
+Provides a Wiimote driver directly usable as a standard game controller.
 It does so by combining Wiimot's keys, accelerometer, and Nunchuk into a single input device.
 
-The following layouts are provided by the "layout" parameter:
+Use "gamepad=1" parameter to gather Wiimote and Nunchuk into a single device to be used as a
+gamepad per [Linux Gamepad Specification](https://www.kernel.org/doc/html/latest/input/gamepad.html)
 
-* "layout=linux" for [Linux Gamepad Specification](https://www.kernel.org/doc/html/latest/input/gamepad.html)
-* "layout=playstation" for Playstation style controller, based on hid-playstation.c
-* "layout=steam" to replicate a Steam controller, based on hid-steam.c
+Otherwise the old driver behaviour applies, with separate devices per function etc.
 
-Parameter "horizontal" is used to re-arrange the D-pad in horizontal mode, if Nunchuk is not present
+# Installation
+Install with "sudo dkms install ." from the folder with dkms.conf
+Otherwise, run "make" inside the src folder and load module manually before connecting by bluetooth:
+```
+$ sudo modprobe -v ff-memless
+$ sudo rmmod hid-wiimote; sudo insmod hid-wiimote.ko gamepad=1
+```
 
-* "horizontal=righty", rotates D-Pad directionso that "right" becomes "up" (i.e. like in Mario Kart)
+**Don't forget to set param "gamepad=1" to take advantage of the new features in this driver!**
 
-In absence of these parameters the old driver behaviour applies, with one separate device per function etc.
+![Screenshot](Screenshot.png)
 
-## TO-DO
+# TO-DO
 
-[] Linux layout
-[] "horizontal" parameter
-[] PSX layout
-[] Steam layout
-[] MotionPlus support
-[] Rumble
-[] Differential accelerometer Nunchuk-Wiimote
+[DONE] Linux layout
+[...] "horizontal" layout ((no Nunchuk)
+[...] PSX layout
+[...] Steam layout
+[...] MotionPlus support
+[...] Rumble
+[...] Differential accelerometer Nunchuk-Wiimote
 
-## Mapping for Linux Gamepad Specification
+# Mapping for Linux Gamepad Specification
 
 ```
           ____________________________              __
@@ -82,7 +87,7 @@ Wiimote +     ~ BTN_FORWARD
 Accelerometer ~ ABS_RX~Z
 Rumble        ~ FF_RUMBLE
 
-### Detection of horizontal position with Accelerator
+## Detection of horizontal position with Accelerator
 Note: Accel-X is -20% (~=-100) when Wiimote is horizontal with the D-pad to the left side,
 +20% (~=+100) when the D-pad is on the right side, centered ~ 0 when vertical
 
@@ -102,7 +107,7 @@ Accel-Z detects up-down movement of the frontside, up being negative.
 It is Zero when vertical, +20% when wiimote sits on a table facing up, -20% facing down
 
 
-## Playstation layout mapping
+# Playstation layout
 
 - Left Joy-X = ABS_X => Nunchuk Joy-X
 - Left Joy-Y = ABS_Y => Nunchuk Joy-Y
@@ -131,7 +136,7 @@ It is Zero when vertical, +20% when wiimote sits on a table facing up, -20% faci
 - BTN_THUMBR, ds_report->buttons[1] & DS_BUTTONS1_R3);
 - BTN_MODE,   ds_report->buttons[2] & DS_BUTTONS2_PS_HOME);
 
-## Steam layout mapping
+# Steam layout
 
 ![Steam controller upside](http://fortressofdoors.com/content/images/2016/10/devdays2016_34.jpg)
 ![Steam controller downside](http://fortressofdoors.com/content/images/2016/10/devdays2016_35.jpg)
