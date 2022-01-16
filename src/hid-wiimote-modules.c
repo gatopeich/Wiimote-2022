@@ -2,6 +2,7 @@
 /*
  * Device Modules for Nintendo Wii / Wii U HID Driver
  * Copyright (c) 2011-2013 David Herrmann <dh.herrmann@gmail.com>
+ * Gamepad support (c) 2022 gatopeich (https://github.com/gatopeich)
  */
 
 /*

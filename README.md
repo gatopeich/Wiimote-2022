@@ -1,4 +1,4 @@
-# Wiimote-2022
+# Wiimote-2022 by gatopeich
 
 Provides a Wiimote driver directly usable as a standard game controller.
 It does so by combining Wiimot's keys, accelerometer, and Nunchuk into a single input device.
@@ -88,9 +88,9 @@ Accelerometer ~ ABS_RX~Z
 Rumble        ~ FF_RUMBLE
 
 ## Detection of horizontal position with Accelerator
-Note: Accel-X is -20% (~=-100) when Wiimote is horizontal with the D-pad to the left side,
+Note: Accel-X is -20% (~ -100) when Wiimote is horizontal with the D-pad to the left side,
 +20% (~=+100) when the D-pad is on the right side, centered ~ 0 when vertical
-
+```
 .------------------------------------.
 ¦   _│^│_     _     (+)     _   _  . ¦ Accel-X ~ -20%
 ¦  |_   _|   (A)    (H)    (1) (2) : ¦ Accel-Y ~ +15%
@@ -102,7 +102,7 @@ Note: Accel-X is -20% (~=-100) when Wiimote is horizontal with the D-pad to the 
 ¦ : (2) (1)      (H)   (A)  |_   _|  ¦ Accel-Y ~ +15%
 ¦ '              (+)          |_|    ¦ Accel-Z ~   0
 `------------------------------------´
-
+```
 Accel-Z detects up-down movement of the frontside, up being negative.
 It is Zero when vertical, +20% when wiimote sits on a table facing up, -20% facing down
 
