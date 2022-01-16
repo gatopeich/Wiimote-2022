@@ -1876,7 +1876,7 @@ bool wiimote_dpad_as_analog = false;
 module_param_named(dpad_as_analog, wiimote_dpad_as_analog, bool, 0644);
 MODULE_PARM_DESC(dpad_as_analog, "Use D-Pad as main analog input");
 
-bool wiimote_gamepad = false;
+bool wiimote_gamepad = true;
 module_param_named(gamepad, wiimote_gamepad, bool, 0644);
 MODULE_PARM_DESC(gamepad, "Layout for Linux Gamepad Specification");
 

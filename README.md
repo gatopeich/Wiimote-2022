@@ -1,12 +1,13 @@
 # Wiimote-2022 by gatopeich
 
-Provides a Wiimote driver directly usable as a standard game controller.
-It does so by combining Wiimot's keys, accelerometer, and Nunchuk into a single input device.
+Tired of not being able to use your wiimote on Linux games out of the box?
+This driver update provides a Wiimote based gamepad directly usable as a standard game controller.
+It does so by combining Wiimote's buttons, accelerometer, and Nunchuk into a single input device.
 
 Use "gamepad=1" parameter to gather Wiimote and Nunchuk into a single device to be used as a
 gamepad per [Linux Gamepad Specification](https://www.kernel.org/doc/html/latest/input/gamepad.html)
 
-Otherwise the old driver behaviour applies, with separate devices per function etc.
+Otherwise with "gamepad=0" the old driver behaviour applies, with separate devices per function etc.
 
 # Installation
 Install with "sudo dkms install ." from the folder with dkms.conf
