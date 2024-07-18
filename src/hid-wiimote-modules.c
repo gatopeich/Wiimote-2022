@@ -65,7 +65,7 @@ static int wiimod_keys_probe(const struct wiimod_ops *ops,
 {
 	unsigned int i;
 
-	if (wiimote_gamepad) {
+	if (merge_nunchuck) {
 		wiimod_keys_map[WIIPROTO_KEY_LEFT] = BTN_DPAD_LEFT;
 		wiimod_keys_map[WIIPROTO_KEY_RIGHT] = BTN_DPAD_RIGHT;
 		wiimod_keys_map[WIIPROTO_KEY_UP] = BTN_DPAD_UP;
@@ -441,6 +441,7 @@ static void wiimod_accel_in_accel(struct wiimote_data *wdata,
 				  const __u8 *accel)
 {
 	__u16 x, y, z;
+	static __u16 min_x, max_x;
 
 	if (!(wdata->state.flags & WIIPROTO_FLAG_ACCEL))
 		return;
@@ -498,7 +499,7 @@ static int wiimod_accel_probe(const struct wiimod_ops *ops,
 {
 	int ret;
 
-	if (wiimote_gamepad) {
+	if (merge_nunchuck) {
 		if (wdata->accel == wdata->input)
 			return 0;
 		wdata->accel = wdata->input;
@@ -527,7 +528,7 @@ static int wiimod_accel_probe(const struct wiimod_ops *ops,
 	input_set_abs_params(wdata->accel, ABS_RY, -500, 500, 2, 4);
 	input_set_abs_params(wdata->accel, ABS_RZ, -500, 500, 2, 4);
 
-	if (!wiimote_gamepad)
+	if (!merge_nunchuck)
 	{
 		ret = input_register_device(wdata->accel);
 		if (ret) {
@@ -546,7 +547,7 @@ err_free:
 static void wiimod_accel_remove(const struct wiimod_ops *ops,
 				struct wiimote_data *wdata)
 {
-	if (wiimote_gamepad || !wdata->accel)
+	if (merge_nunchuck || !wdata->accel)
 		return;
 
 	input_unregister_device(wdata->accel);
@@ -900,13 +901,13 @@ static void wiimod_nunchuk_in_ext(struct wiimote_data *wdata, const __u8 *ext)
 	z -= 0x200;
 
 	// Report stick in the first 2 axis ~ main control in standard games
-	input_report_abs(wdata->extension.input, wiimote_gamepad?ABS_X:ABS_HAT0X, bx);
-	input_report_abs(wdata->extension.input, wiimote_gamepad?ABS_Y:ABS_HAT0Y, by);
+	input_report_abs(wdata->extension.input, merge_nunchuck?ABS_X:ABS_HAT0X, bx);
+	input_report_abs(wdata->extension.input, merge_nunchuck?ABS_Y:ABS_HAT0Y, by);
 
 	// Report X-Y accelerometer as "HAT0", and vertical => main Z axis to use for jump/fly
-	input_report_abs(wdata->extension.input, wiimote_gamepad?ABS_HAT0X:ABS_RX, x);
-	input_report_abs(wdata->extension.input, wiimote_gamepad?ABS_HAT0Y:ABS_RY, y);
-	input_report_abs(wdata->extension.input, wiimote_gamepad?ABS_Z:ABS_RZ, z);
+	input_report_abs(wdata->extension.input, merge_nunchuck?ABS_HAT0X:ABS_RX, x);
+	input_report_abs(wdata->extension.input, merge_nunchuck?ABS_HAT0Y:ABS_RY, y);
+	input_report_abs(wdata->extension.input, merge_nunchuck?ABS_Z:ABS_RZ, z);
 
 	if (wdata->state.flags & WIIPROTO_FLAG_MP_ACTIVE) {
 		input_report_key(wdata->extension.input,
@@ -956,7 +957,7 @@ static int wiimod_nunchuk_probe(const struct wiimod_ops *ops,
 {
 	int ret, i;
 
-	if (wiimote_gamepad) {
+	if (merge_nunchuck) {
 		if (wdata->extension.input == wdata->input) {
 			// Already initialized, Nunchuck must be plugged-in
 			wiimod_nunchuk_open(wdata->input);
@@ -990,21 +991,21 @@ static int wiimod_nunchuk_probe(const struct wiimod_ops *ops,
 	set_bit(EV_ABS, wdata->extension.input->evbit);
 	set_bit(ABS_HAT0X, wdata->extension.input->absbit);
 	set_bit(ABS_HAT0Y, wdata->extension.input->absbit);
-	set_bit(wiimote_gamepad?ABS_X:ABS_RX, wdata->extension.input->absbit);
-	set_bit(wiimote_gamepad?ABS_Y:ABS_RY, wdata->extension.input->absbit);
-	set_bit(wiimote_gamepad?ABS_Z:ABS_RZ, wdata->extension.input->absbit);
+	set_bit(merge_nunchuck?ABS_X:ABS_RX, wdata->extension.input->absbit);
+	set_bit(merge_nunchuck?ABS_Y:ABS_RY, wdata->extension.input->absbit);
+	set_bit(merge_nunchuck?ABS_Z:ABS_RZ, wdata->extension.input->absbit);
 	input_set_abs_params(wdata->extension.input,
-			     wiimote_gamepad?ABS_X:ABS_HAT0X, -120, 120, 2, 4);
+			     merge_nunchuck?ABS_X:ABS_HAT0X, -120, 120, 2, 4);
 	input_set_abs_params(wdata->extension.input,
-			     wiimote_gamepad?ABS_Y:ABS_HAT0Y, -120, 120, 2, 4);
+			     merge_nunchuck?ABS_Y:ABS_HAT0Y, -120, 120, 2, 4);
 	input_set_abs_params(wdata->extension.input,
-			     wiimote_gamepad?ABS_HAT0X:ABS_RX, -500, 500, 2, 4);
+			     merge_nunchuck?ABS_HAT0X:ABS_RX, -500, 500, 2, 4);
 	input_set_abs_params(wdata->extension.input,
-			     wiimote_gamepad?ABS_HAT0Y:ABS_RY, -500, 500, 2, 4);
+			     merge_nunchuck?ABS_HAT0Y:ABS_RY, -500, 500, 2, 4);
 	input_set_abs_params(wdata->extension.input,
-			     wiimote_gamepad?ABS_Z:ABS_RZ, -500, 500, 2, 4);
+			     merge_nunchuck?ABS_Z:ABS_RZ, -500, 500, 2, 4);
 
-	if (!wiimote_gamepad) {
+	if (!merge_nunchuck) {
 		ret = input_register_device(wdata->extension.input);
 		if (ret)
 			goto err_free;
@@ -1021,7 +1022,7 @@ err_free:
 static void wiimod_nunchuk_remove(const struct wiimod_ops *ops,
 				  struct wiimote_data *wdata)
 {
-	if (wiimote_gamepad) {
+	if (merge_nunchuck) {
 		wiimod_nunchuk_close(wdata->input);
 		return;
 	}

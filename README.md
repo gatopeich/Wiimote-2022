@@ -13,11 +13,11 @@ Otherwise with "gamepad=0" the old driver behaviour applies, with separate devic
 Install with "sudo dkms install ." from the folder with dkms.conf
 Otherwise, run "make" inside the src folder and load module manually before connecting by bluetooth:
 ```
-$ sudo modprobe -v ff-memless
-$ sudo rmmod hid-wiimote; sudo insmod hid-wiimote.ko gamepad=1
+$ sudo modprobe -v ff-memless  # Dependency for rumble module
+$ sudo rmmod hid-wiimote; sudo insmod hid-wiimote.ko merge_nunchuck=1
 ```
 
-**Don't forget to set param "gamepad=1" to take advantage of the new features in this driver!**
+**Remember to set param "merge_nunchuck=1" to have your nunchuck integrated**
 
 ![Screenshot](Screenshot.png)
 

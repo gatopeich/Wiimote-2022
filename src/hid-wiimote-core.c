@@ -618,7 +618,7 @@ static const __u8 * const wiimote_devtype_mods[WIIMOTE_DEV_NUM] = {
 static void wiimote_modules_load(struct wiimote_data *wdata,
 				 unsigned int devtype)
 {
-	bool need_input = wiimote_gamepad;
+	bool need_input = merge_nunchuck;
 	const __u8 *mods, *iter;
 	const struct wiimod_ops *ops;
 	int ret;
@@ -656,8 +656,7 @@ static void wiimote_modules_load(struct wiimote_data *wdata,
 			goto error;
 	}
 
-	if (wiimote_gamepad) {
-		// Gamepad mode:
+	if (merge_nunchuck) {
 		// Include Accelerometer and Nunchuk data in same input device
 		wiimod_ext_table[WIIMOTE_EXT_NUNCHUK]->probe(NULL, wdata);
 		wdata->extension.input->name = "Wiimote+Nunchuk Gamepad (Wiimote-2022)";
@@ -1684,9 +1683,8 @@ static ssize_t wiimote_ext_store(struct device *dev,
 				 struct device_attribute *attr,
 				 const char *buf, size_t count)
 {
-	struct wiimote_data *wdata = dev_to_wii(dev);
-
 	if (!strcmp(buf, "scan")) {
+		struct wiimote_data *wdata = dev_to_wii(dev);
 		wiimote_schedule(wdata);
 	} else {
 		return -EINVAL;
@@ -1876,9 +1874,9 @@ bool wiimote_dpad_as_analog = false;
 module_param_named(dpad_as_analog, wiimote_dpad_as_analog, bool, 0644);
 MODULE_PARM_DESC(dpad_as_analog, "Use D-Pad as main analog input");
 
-bool wiimote_gamepad = true;
-module_param_named(gamepad, wiimote_gamepad, bool, 0644);
-MODULE_PARM_DESC(gamepad, "Layout for Linux Gamepad Specification");
+bool merge_nunchuck = true;
+module_param_named(merge_nunchuck, merge_nunchuck, bool, 0644);
+MODULE_PARM_DESC(merge_nunchuck, "Include nunchuck in Linux Gamepad Specification layout");
 
 MODULE_DEVICE_TABLE(hid, wiimote_hid_devices);
 
