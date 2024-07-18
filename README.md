@@ -23,13 +23,13 @@ $ sudo rmmod hid-wiimote; sudo insmod hid-wiimote.ko gamepad=1
 
 # TO-DO
 
-[DONE] Linux layout
-[...] "horizontal" layout ((no Nunchuk)
-[...] PSX layout
-[...] Steam layout
-[...] MotionPlus support
-[...] Rumble
-[...] Differential accelerometer Nunchuk-Wiimote
+* [DONE] Linux layout
+* [...] "horizontal" layout ((no Nunchuk)
+* [...] PSX layout
+* [...] Steam layout
+* [...] MotionPlus support
+* [...] Rumble
+* [...] Differential accelerometer Nunchuk-Wiimote
 
 # Mapping for Linux Gamepad Specification
 
@@ -93,15 +93,15 @@ Note: Accel-X is -20% (~ -100) when Wiimote is horizontal with the D-pad to the 
 +20% (~=+100) when the D-pad is on the right side, centered ~ 0 when vertical
 ```
 .------------------------------------.
-¦   _│^│_     _     (+)     _   _  . ¦ Accel-X ~ -20%
+¦   _│^│_           (+)            . ¦ Accel-X ~ -20%
 ¦  |_   _|   (A)    (H)    (1) (2) : ¦ Accel-Y ~ +15%
-¦o   |_|            (-)            ' ¦ Accel-Z ~   0
+¦⊝   |_|            (-)            · ¦ Accel-Z ~   0
 `------------------------------------´
 
 .------------------------------------.
-¦ .  _   _       (-)    _    _│^│_  *¦ Accel-X ~ +20%
+¦ .              (-)         _│^│_  ⊝¦ Accel-X ~ +20%
 ¦ : (2) (1)      (H)   (A)  |_   _|  ¦ Accel-Y ~ +15%
-¦ '              (+)          |_|    ¦ Accel-Z ~   0
+¦ ·              (+)          |_|    ¦ Accel-Z ~   0
 `------------------------------------´
 ```
 Accel-Z detects up-down movement of the frontside, up being negative.
@@ -114,30 +114,32 @@ It is Zero when vertical, +20% when wiimote sits on a table facing up, -20% faci
 - Left Joy-Y = ABS_Y => Nunchuk Joy-Y
 - Right Joy-X = ABS_RX => Accelerometer X
 - Right Joy-Y = ABS_RY => Accelerometer Z (vertical)
-- ABS_Z,  ds_report->z);
-- ABS_RZ, ds_report->rz);
+- ABS_Z,  ds_report->z
+- ABS_RZ, ds_report->rz
 
 	value = ds_report->buttons[0] & DS_BUTTONS0_HAT_SWITCH;
 	if (value >= ARRAY_SIZE(ps_gamepad_hat_mapping))
 		value = 8; /* center */
-- ABS_HAT0X, ps_gamepad_hat_mapping[value].x);
-- ABS_HAT0Y, ps_gamepad_hat_mapping[value].y);
+- ABS_HAT0X, ps_gamepad_hat_mapping[value].x
+- ABS_HAT0Y, ps_gamepad_hat_mapping[value].y
 
-- BTN_WEST,   ds_report->buttons[0] & DS_BUTTONS0_SQUARE);
-- BTN_SOUTH,  ds_report->buttons[0] & DS_BUTTONS0_CROSS);
-- BTN_EAST,   ds_report->buttons[0] & DS_BUTTONS0_CIRCLE);
-- BTN_NORTH,  ds_report->buttons[0] & DS_BUTTONS0_TRIANGLE);
-- BTN_TL,     ds_report->buttons[1] & DS_BUTTONS1_L1);
-- BTN_TR,     ds_report->buttons[1] & DS_BUTTONS1_R1);
-- BTN_TL2,    ds_report->buttons[1] & DS_BUTTONS1_L2);
-- BTN_TR2,    ds_report->buttons[1] & DS_BUTTONS1_R2);
-- BTN_SELECT, ds_report->buttons[1] & DS_BUTTONS1_CREATE);
-- BTN_START,  ds_report->buttons[1] & DS_BUTTONS1_OPTIONS);
-- BTN_THUMBL, ds_report->buttons[1] & DS_BUTTONS1_L3);
-- BTN_THUMBR, ds_report->buttons[1] & DS_BUTTONS1_R3);
-- BTN_MODE,   ds_report->buttons[2] & DS_BUTTONS2_PS_HOME);
+- BTN_WEST,   ds_report->buttons[0] & DS_BUTTONS0_SQUARE
+- BTN_SOUTH,  ds_report->buttons[0] & DS_BUTTONS0_CROSS
+- BTN_EAST,   ds_report->buttons[0] & DS_BUTTONS0_CIRCLE
+- BTN_NORTH,  ds_report->buttons[0] & DS_BUTTONS0_TRIANGLE
+- BTN_TL,     ds_report->buttons[1] & DS_BUTTONS1_L1
+- BTN_TR,     ds_report->buttons[1] & DS_BUTTONS1_R1
+- BTN_TL2,    ds_report->buttons[1] & DS_BUTTONS1_L2
+- BTN_TR2,    ds_report->buttons[1] & DS_BUTTONS1_R2
+- BTN_SELECT, ds_report->buttons[1] & DS_BUTTONS1_CREATE
+- BTN_START,  ds_report->buttons[1] & DS_BUTTONS1_OPTIONS
+- BTN_THUMBL, ds_report->buttons[1] & DS_BUTTONS1_L3
+- BTN_THUMBR, ds_report->buttons[1] & DS_BUTTONS1_R3
+- BTN_MODE,   ds_report->buttons[2] & DS_BUTTONS2_PS_HOME
 
 # Steam layout
+
+**TO BE DONE!**
 
 ![Steam controller upside](http://fortressofdoors.com/content/images/2016/10/devdays2016_34.jpg)
 ![Steam controller downside](http://fortressofdoors.com/content/images/2016/10/devdays2016_35.jpg)
