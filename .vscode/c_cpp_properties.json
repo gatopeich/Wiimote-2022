@@ -4,7 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/src/linux-hwe-5.13-headers-5.13.0-25/include"
+                "/lib/modules/5.15.0-116-generic/build/include",
+                "/usr/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang-12",
