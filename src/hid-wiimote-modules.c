@@ -1041,6 +1041,11 @@ static const __u16 wiimod_classic_map[] = {
 	BTN_TR,		/* WIIMOD_CLASSIC_KEY_RT */
 };
 
+static inline int digital_to_analog(bool positive, bool negative, int range)
+{
+	return range * (!negative - !positive);
+}
+
 static void wiimod_classic_in_ext(struct wiimote_data *wdata, const __u8 *ext)
 {
 	__s8 rx, ry, lx, ly, lt, rt;
@@ -1088,24 +1093,18 @@ static void wiimod_classic_in_ext(struct wiimote_data *wdata, const __u8 *ext)
 	 * is the same as before.
 	 */
 
-	static const s8 digital_to_analog[3] = {0x20, 0, -0x20};
-
 	if (wdata->state.flags & WIIPROTO_FLAG_MP_ACTIVE) {
 		if (wiimote_dpad_as_analog) {
-			lx = digital_to_analog[1 - !(ext[4] & 0x80)
-				+ !(ext[1] & 0x01)];
-			ly = digital_to_analog[1 - !(ext[4] & 0x40)
-				+ !(ext[0] & 0x01)];
+			lx = digital_to_analog(ext[4] & 0x80, ext[1] & 0x01, 30);
+			ly = digital_to_analog(ext[4] & 0x40, ext[0] & 0x01, 30);
 		} else {
 			lx = (ext[0] & 0x3e) - 0x20;
 			ly = (ext[1] & 0x3e) - 0x20;
 		}
 	} else {
 		if (wiimote_dpad_as_analog) {
-			lx = digital_to_analog[1 - !(ext[4] & 0x80)
-				+ !(ext[5] & 0x02)];
-			ly = digital_to_analog[1 - !(ext[4] & 0x40)
-				+ !(ext[5] & 0x01)];
+			lx = digital_to_analog(ext[4] & 0x80, ext[5] & 0x02, 30);
+			ly = digital_to_analog(ext[4] & 0x40, ext[5] & 0x01, 30);
 		} else {
 			lx = (ext[0] & 0x3f) - 0x20;
 			ly = (ext[1] & 0x3f) - 0x20;
@@ -1250,18 +1249,14 @@ static int wiimod_classic_probe(const struct wiimod_ops *ops,
 	set_bit(ABS_HAT2Y, wdata->extension.input->absbit);
 	set_bit(ABS_HAT3X, wdata->extension.input->absbit);
 	set_bit(ABS_HAT3Y, wdata->extension.input->absbit);
-	input_set_abs_params(wdata->extension.input,
-			     ABS_HAT1X, -30, 30, 1, 1);
-	input_set_abs_params(wdata->extension.input,
-			     ABS_HAT1Y, -30, 30, 1, 1);
-	input_set_abs_params(wdata->extension.input,
-			     ABS_HAT2X, -30, 30, 1, 1);
-	input_set_abs_params(wdata->extension.input,
-			     ABS_HAT2Y, -30, 30, 1, 1);
-	input_set_abs_params(wdata->extension.input,
-			     ABS_HAT3X, -30, 30, 1, 1);
-	input_set_abs_params(wdata->extension.input,
-			     ABS_HAT3Y, -30, 30, 1, 1);
+
+	// Actual range is [-32, +32], depending on variations
+	input_set_abs_params(wdata->extension.input, ABS_HAT1X, -30, 30, 1, 1);
+	input_set_abs_params(wdata->extension.input, ABS_HAT1Y, -30, 30, 1, 1);
+	input_set_abs_params(wdata->extension.input, ABS_HAT2X, -30, 30, 1, 1);
+	input_set_abs_params(wdata->extension.input, ABS_HAT2Y, -30, 30, 1, 1);
+	input_set_abs_params(wdata->extension.input, ABS_HAT3X, -30, 30, 1, 1);
+	input_set_abs_params(wdata->extension.input, ABS_HAT3Y, -30, 30, 1, 1);
 
 	ret = input_register_device(wdata->extension.input);
 	if (ret)
