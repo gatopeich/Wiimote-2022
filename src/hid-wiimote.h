@@ -5,7 +5,9 @@
 /*
  * HID driver for Nintendo Wii / Wii U peripherals
  * Copyright (c) 2011-2013 David Herrmann <dh.herrmann@gmail.com>
- * Gamepad support (c) 2022 gatopeich (https://github.com/gatopeich)
+ */
+
+/*
  */
 
 #include <linux/completion.h>
@@ -86,6 +88,7 @@ enum wiimote_exttype {
 	WIIMOTE_EXT_PRO_CONTROLLER,
 	WIIMOTE_EXT_DRUMS,
 	WIIMOTE_EXT_GUITAR,
+	WIIMOTE_EXT_TURNTABLE,
 	WIIMOTE_EXT_NUM,
 };
 
@@ -161,7 +164,6 @@ struct wiimote_data {
 };
 
 extern bool wiimote_dpad_as_analog;
-extern bool merge_nunchuck;
 
 /* wiimote modules */
 

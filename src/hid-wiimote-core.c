@@ -2,7 +2,9 @@
 /*
  * HID driver for Nintendo Wii / Wii U peripherals
  * Copyright (c) 2011-2013 David Herrmann <dh.herrmann@gmail.com>
- * Gamepad support (c) 2022 gatopeich (https://github.com/gatopeich)
+ */
+
+/*
  */
 
 #include <linux/completion.h>
@@ -456,6 +458,9 @@ static __u8 wiimote_cmd_read_ext(struct wiimote_data *wdata, __u8 *rmem)
 	if (rmem[0] == 0x00 && rmem[1] == 0x00 &&
 	    rmem[4] == 0x01 && rmem[5] == 0x03)
 		return WIIMOTE_EXT_GUITAR;
+	if (rmem[0] == 0x03 && rmem[1] == 0x00 &&
+	    rmem[4] == 0x01 && rmem[5] == 0x03)
+		return WIIMOTE_EXT_TURNTABLE;
 
 	return WIIMOTE_EXT_UNKNOWN;
 }
@@ -493,6 +498,7 @@ static bool wiimote_cmd_map_mp(struct wiimote_data *wdata, __u8 exttype)
 	case WIIMOTE_EXT_GUITAR:
 		wmem = 0x07;
 		break;
+	case WIIMOTE_EXT_TURNTABLE:
 	case WIIMOTE_EXT_NUNCHUK:
 		wmem = 0x05;
 		break;
@@ -618,7 +624,7 @@ static const __u8 * const wiimote_devtype_mods[WIIMOTE_DEV_NUM] = {
 static void wiimote_modules_load(struct wiimote_data *wdata,
 				 unsigned int devtype)
 {
-	bool need_input = merge_nunchuck;
+	bool need_input = false;
 	const __u8 *mods, *iter;
 	const struct wiimod_ops *ops;
 	int ret;
@@ -654,12 +660,6 @@ static void wiimote_modules_load(struct wiimote_data *wdata,
 		ret = ops->probe(ops, wdata);
 		if (ret)
 			goto error;
-	}
-
-	if (merge_nunchuck) {
-		// Include Accelerometer and Nunchuk data in same input device
-		wiimod_ext_table[WIIMOTE_EXT_NUNCHUK]->probe(NULL, wdata);
-		wdata->extension.input->name = "Wiimote+Nunchuk Gamepad (Wiimote-2022)";
 	}
 
 	if (wdata->input) {
@@ -1086,6 +1086,7 @@ static const char *wiimote_exttype_names[WIIMOTE_EXT_NUM] = {
 	[WIIMOTE_EXT_PRO_CONTROLLER] = "Nintendo Wii U Pro Controller",
 	[WIIMOTE_EXT_DRUMS] = "Nintendo Wii Drums",
 	[WIIMOTE_EXT_GUITAR] = "Nintendo Wii Guitar",
+	[WIIMOTE_EXT_TURNTABLE] = "Nintendo Wii Turntable"
 };
 
 /*
@@ -1673,6 +1674,8 @@ static ssize_t wiimote_ext_show(struct device *dev,
 		return sprintf(buf, "drums\n");
 	case WIIMOTE_EXT_GUITAR:
 		return sprintf(buf, "guitar\n");
+	case WIIMOTE_EXT_TURNTABLE:
+		return sprintf(buf, "turntable\n");
 	case WIIMOTE_EXT_UNKNOWN:
 	default:
 		return sprintf(buf, "unknown\n");
@@ -1683,8 +1686,9 @@ static ssize_t wiimote_ext_store(struct device *dev,
 				 struct device_attribute *attr,
 				 const char *buf, size_t count)
 {
+	struct wiimote_data *wdata = dev_to_wii(dev);
+
 	if (!strcmp(buf, "scan")) {
-		struct wiimote_data *wdata = dev_to_wii(dev);
 		wiimote_schedule(wdata);
 	} else {
 		return -EINVAL;
@@ -1767,7 +1771,7 @@ static void wiimote_destroy(struct wiimote_data *wdata)
 	spin_unlock_irqrestore(&wdata->state.lock, flags);
 
 	cancel_work_sync(&wdata->init_worker);
-	del_timer_sync(&wdata->timer);
+	timer_shutdown_sync(&wdata->timer);
 
 	device_remove_file(&wdata->hdev->dev, &dev_attr_devtype);
 	device_remove_file(&wdata->hdev->dev, &dev_attr_extension);
@@ -1873,10 +1877,6 @@ static const struct hid_device_id wiimote_hid_devices[] = {
 bool wiimote_dpad_as_analog = false;
 module_param_named(dpad_as_analog, wiimote_dpad_as_analog, bool, 0644);
 MODULE_PARM_DESC(dpad_as_analog, "Use D-Pad as main analog input");
-
-bool merge_nunchuck = true;
-module_param_named(merge_nunchuck, merge_nunchuck, bool, 0644);
-MODULE_PARM_DESC(merge_nunchuck, "Include nunchuck in Linux Gamepad Specification layout");
 
 MODULE_DEVICE_TABLE(hid, wiimote_hid_devices);
 
