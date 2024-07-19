@@ -21,7 +21,7 @@
 #include <linux/spinlock.h>
 #include <linux/timer.h>
 
-#define WIIMOTE_NAME "Nintendo Wii Remote"
+#define WIIMOTE_NAME "Nintendo Wii Remote 2024"
 #define WIIMOTE_BUFSIZE 32
 
 #define WIIPROTO_FLAG_LED1		0x01

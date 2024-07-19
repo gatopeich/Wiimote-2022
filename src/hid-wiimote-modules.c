@@ -59,16 +59,25 @@ static const __u16 wiimod_keys_map[] = {
 	BTN_MODE,	/* WIIPROTO_KEY_HOME */
 };
 
+static inline int digital_to_analog(bool positive, bool negative)
+{
+	return 32 * (!negative - !positive);
+}
+
 static void wiimod_keys_in_keys(struct wiimote_data *wdata, const __u8 *keys)
 {
-	input_report_key(wdata->input, wiimod_keys_map[WIIPROTO_KEY_LEFT],
-							!!(keys[0] & 0x01));
-	input_report_key(wdata->input, wiimod_keys_map[WIIPROTO_KEY_RIGHT],
-							!!(keys[0] & 0x02));
-	input_report_key(wdata->input, wiimod_keys_map[WIIPROTO_KEY_DOWN],
-							!!(keys[0] & 0x04));
-	input_report_key(wdata->input, wiimod_keys_map[WIIPROTO_KEY_UP],
-							!!(keys[0] & 0x08));
+	bool left = !!(keys[0] & 0x01), right = !!(keys[0] & 0x02);
+	bool down = !!(keys[0] & 0x04), up = !!(keys[0] & 0x08);
+
+	// TODO: Report abs only if nunchuck not available
+	input_report_abs(wdata->input, ABS_X, digital_to_analog(right, left));
+	input_report_abs(wdata->input, ABS_Y, digital_to_analog(down, up));
+
+	input_report_key(wdata->input, wiimod_keys_map[WIIPROTO_KEY_LEFT], left);
+	input_report_key(wdata->input, wiimod_keys_map[WIIPROTO_KEY_RIGHT], right);
+	input_report_key(wdata->input, wiimod_keys_map[WIIPROTO_KEY_DOWN], down);
+	input_report_key(wdata->input, wiimod_keys_map[WIIPROTO_KEY_UP], up);
+
 	input_report_key(wdata->input, wiimod_keys_map[WIIPROTO_KEY_PLUS],
 							!!(keys[0] & 0x10));
 	input_report_key(wdata->input, wiimod_keys_map[WIIPROTO_KEY_TWO],
@@ -89,11 +98,19 @@ static void wiimod_keys_in_keys(struct wiimote_data *wdata, const __u8 *keys)
 static int wiimod_keys_probe(const struct wiimod_ops *ops,
 			     struct wiimote_data *wdata)
 {
-	unsigned int i;
+	unsigned int i, axis;
 
 	set_bit(EV_KEY, wdata->input->evbit);
 	for (i = 0; i < WIIPROTO_KEY_COUNT; ++i)
 		set_bit(wiimod_keys_map[i], wdata->input->keybit);
+
+	// Prepare analog axis for D-pad
+	set_bit(EV_ABS, wdata->input->evbit);
+	for (axis = ABS_X; axis <= ABS_Y; axis++) {
+		set_bit(axis, wdata->input->absbit);
+		input_set_abs_params(wdata->input, axis,
+			digital_to_analog(0, 1), digital_to_analog(1, 0), 0, 0);
+	}
 
 	return 0;
 }
@@ -930,6 +947,7 @@ static int wiimod_nunchuk_probe(const struct wiimod_ops *ops,
 {
 	int ret, i;
 
+	// TODO: Add nunchuck to the default input device to build a combined controller layout
 	wdata->extension.input = input_allocate_device();
 	if (!wdata->extension.input)
 		return -ENOMEM;
@@ -1041,11 +1059,6 @@ static const __u16 wiimod_classic_map[] = {
 	BTN_TR,		/* WIIMOD_CLASSIC_KEY_RT */
 };
 
-static inline int digital_to_analog(bool positive, bool negative, int range)
-{
-	return range * (!negative - !positive);
-}
-
 static void wiimod_classic_in_ext(struct wiimote_data *wdata, const __u8 *ext)
 {
 	__s8 rx, ry, lx, ly, lt, rt;
@@ -1095,16 +1108,16 @@ static void wiimod_classic_in_ext(struct wiimote_data *wdata, const __u8 *ext)
 
 	if (wdata->state.flags & WIIPROTO_FLAG_MP_ACTIVE) {
 		if (wiimote_dpad_as_analog) {
-			lx = digital_to_analog(ext[4] & 0x80, ext[1] & 0x01, 30);
-			ly = digital_to_analog(ext[4] & 0x40, ext[0] & 0x01, 30);
+			lx = digital_to_analog(ext[4] & 0x80, ext[1] & 0x01);
+			ly = digital_to_analog(ext[4] & 0x40, ext[0] & 0x01);
 		} else {
 			lx = (ext[0] & 0x3e) - 0x20;
 			ly = (ext[1] & 0x3e) - 0x20;
 		}
 	} else {
 		if (wiimote_dpad_as_analog) {
-			lx = digital_to_analog(ext[4] & 0x80, ext[5] & 0x02, 30);
-			ly = digital_to_analog(ext[4] & 0x40, ext[5] & 0x01, 30);
+			lx = digital_to_analog(ext[4] & 0x80, ext[5] & 0x02);
+			ly = digital_to_analog(ext[4] & 0x40, ext[5] & 0x01);
 		} else {
 			lx = (ext[0] & 0x3f) - 0x20;
 			ly = (ext[1] & 0x3f) - 0x20;
