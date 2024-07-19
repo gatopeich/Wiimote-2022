@@ -4,5 +4,13 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"makefile.makefilePath": "src/Makefile",
+		"C_Cpp.default.systemIncludePath": [
+			"/lib/modules/5.15.0-116-generic/build/include/"
+		],
+		"files.associations": {
+			"device.h": "c"
+		}
+	}
 }
