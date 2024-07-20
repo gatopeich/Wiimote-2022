@@ -112,6 +112,8 @@ static int wiimod_keys_probe(const struct wiimod_ops *ops,
 			digital_to_analog(0, 1), digital_to_analog(1, 0), 0, 0);
 	}
 
+	wdata->in_keys = wiimod_keys_in_keys;
+
 	return 0;
 }
 
@@ -119,8 +121,6 @@ static const struct wiimod_ops wiimod_keys = {
 	.flags = WIIMOD_FLAG_INPUT,
 	.arg = 0,
 	.probe = wiimod_keys_probe,
-	.remove = NULL,
-	.in_keys = wiimod_keys_in_keys,
 };
 
 /*
@@ -467,91 +467,32 @@ static void wiimod_accel_in_accel(struct wiimote_data *wdata,
 	y |= (accel[1] >> 4) & 0x2;
 	z |= (accel[1] >> 5) & 0x2;
 
-	input_report_abs(wdata->accel, ABS_RX, x - 0x200);
-	input_report_abs(wdata->accel, ABS_RY, y - 0x200);
-	input_report_abs(wdata->accel, ABS_RZ, z - 0x200);
-	input_sync(wdata->accel);
-}
-
-static int wiimod_accel_open(struct input_dev *dev)
-{
-	struct wiimote_data *wdata = input_get_drvdata(dev);
-	unsigned long flags;
-
-	spin_lock_irqsave(&wdata->state.lock, flags);
-	wiiproto_req_accel(wdata, true);
-	spin_unlock_irqrestore(&wdata->state.lock, flags);
-
-	return 0;
-}
-
-static void wiimod_accel_close(struct input_dev *dev)
-{
-	struct wiimote_data *wdata = input_get_drvdata(dev);
-	unsigned long flags;
-
-	spin_lock_irqsave(&wdata->state.lock, flags);
-	wiiproto_req_accel(wdata, false);
-	spin_unlock_irqrestore(&wdata->state.lock, flags);
+	input_report_abs(wdata->input, ABS_RX, x - 0x200);
+	input_report_abs(wdata->input, ABS_RY, y - 0x200);
+	input_report_abs(wdata->input, ABS_RZ, z - 0x200);
+	input_sync(wdata->input);
 }
 
 static int wiimod_accel_probe(const struct wiimod_ops *ops,
 			      struct wiimote_data *wdata)
 {
-	int ret;
+	wdata->state.flags |= WIIPROTO_FLAG_ACCEL;
+	set_bit(EV_ABS, wdata->input->evbit);
+	set_bit(ABS_RX, wdata->input->absbit);
+	set_bit(ABS_RY, wdata->input->absbit);
+	set_bit(ABS_RZ, wdata->input->absbit);
+	input_set_abs_params(wdata->input, ABS_RX, -500, 500, 2, 4);
+	input_set_abs_params(wdata->input, ABS_RY, -500, 500, 2, 4);
+	input_set_abs_params(wdata->input, ABS_RZ, -500, 500, 2, 4);
 
-	wdata->accel = input_allocate_device();
-	if (!wdata->accel)
-		return -ENOMEM;
-
-	input_set_drvdata(wdata->accel, wdata);
-	wdata->accel->open = wiimod_accel_open;
-	wdata->accel->close = wiimod_accel_close;
-	wdata->accel->dev.parent = &wdata->hdev->dev;
-	wdata->accel->id.bustype = wdata->hdev->bus;
-	wdata->accel->id.vendor = wdata->hdev->vendor;
-	wdata->accel->id.product = wdata->hdev->product;
-	wdata->accel->id.version = wdata->hdev->version;
-	wdata->accel->name = WIIMOTE_NAME " Accelerometer";
-
-	set_bit(EV_ABS, wdata->accel->evbit);
-	set_bit(ABS_RX, wdata->accel->absbit);
-	set_bit(ABS_RY, wdata->accel->absbit);
-	set_bit(ABS_RZ, wdata->accel->absbit);
-	input_set_abs_params(wdata->accel, ABS_RX, -500, 500, 2, 4);
-	input_set_abs_params(wdata->accel, ABS_RY, -500, 500, 2, 4);
-	input_set_abs_params(wdata->accel, ABS_RZ, -500, 500, 2, 4);
-
-	ret = input_register_device(wdata->accel);
-	if (ret) {
-		hid_err(wdata->hdev, "cannot register input device\n");
-		goto err_free;
-	}
-
+	wdata->in_accel = wiimod_accel_in_accel;
 	return 0;
-
-err_free:
-	input_free_device(wdata->accel);
-	wdata->accel = NULL;
-	return ret;
-}
-
-static void wiimod_accel_remove(const struct wiimod_ops *ops,
-				struct wiimote_data *wdata)
-{
-	if (!wdata->accel)
-		return;
-
-	input_unregister_device(wdata->accel);
-	wdata->accel = NULL;
 }
 
 static const struct wiimod_ops wiimod_accel = {
-	.flags = 0,
+	.flags = WIIMOD_FLAG_INPUT,
 	.arg = 0,
 	.probe = wiimod_accel_probe,
-	.remove = wiimod_accel_remove,
-	.in_accel = wiimod_accel_in_accel,
 };
 
 /*
@@ -1545,6 +1486,7 @@ static int wiimod_bboard_probe(const struct wiimod_ops *ops,
 	if (ret)
 		goto err_file;
 
+	wdata->in_keys = wiimod_bboard_in_keys;
 	return 0;
 
 err_file:
@@ -1573,7 +1515,6 @@ static const struct wiimod_ops wiimod_bboard = {
 	.arg = 0,
 	.probe = wiimod_bboard_probe,
 	.remove = wiimod_bboard_remove,
-	.in_keys = wiimod_bboard_in_keys,
 	.in_ext = wiimod_bboard_in_ext,
 };
 

@@ -266,20 +266,6 @@ void wiiproto_req_status(struct wiimote_data *wdata)
 	wiimote_queue(wdata, cmd, sizeof(cmd));
 }
 
-void wiiproto_req_accel(struct wiimote_data *wdata, __u8 accel)
-{
-	accel = !!accel;
-	if (accel == !!(wdata->state.flags & WIIPROTO_FLAG_ACCEL))
-		return;
-
-	if (accel)
-		wdata->state.flags |= WIIPROTO_FLAG_ACCEL;
-	else
-		wdata->state.flags &= ~WIIPROTO_FLAG_ACCEL;
-
-	wiiproto_req_drm(wdata, WIIPROTO_REQ_NULL);
-}
-
 void wiiproto_req_ir1(struct wiimote_data *wdata, __u8 flags)
 {
 	__u8 cmd[2];
@@ -1249,44 +1235,15 @@ static void wiimote_init_timeout(struct timer_list *t)
 
 static void handler_keys(struct wiimote_data *wdata, const __u8 *payload)
 {
-	const __u8 *iter, *mods;
-	const struct wiimod_ops *ops;
-
-	ops = wiimod_ext_table[wdata->state.exttype];
-	if (ops->in_keys) {
-		ops->in_keys(wdata, payload);
-		return;
-	}
-
-	mods = wiimote_devtype_mods[wdata->state.devtype];
-	for (iter = mods; *iter != WIIMOD_NULL; ++iter) {
-		ops = wiimod_table[*iter];
-		if (ops->in_keys) {
-			ops->in_keys(wdata, payload);
-			break;
-		}
-	}
+	if (wdata->in_keys)
+		wdata->in_keys(wdata, payload);
 }
 
+// FIXME: Remove this code since only 1 "ops" element contains ".in_accel" handler
 static void handler_accel(struct wiimote_data *wdata, const __u8 *payload)
 {
-	const __u8 *iter, *mods;
-	const struct wiimod_ops *ops;
-
-	ops = wiimod_ext_table[wdata->state.exttype];
-	if (ops->in_accel) {
-		ops->in_accel(wdata, payload);
-		return;
-	}
-
-	mods = wiimote_devtype_mods[wdata->state.devtype];
-	for (iter = mods; *iter != WIIMOD_NULL; ++iter) {
-		ops = wiimod_table[*iter];
-		if (ops->in_accel) {
-			ops->in_accel(wdata, payload);
-			break;
-		}
-	}
+	if (wdata->in_accel)
+		wdata->in_accel(wdata, payload);
 }
 
 static bool valid_ext_handler(const struct wiimod_ops *ops, size_t len)
@@ -1853,7 +1810,6 @@ err_stop:
 	hid_hw_stop(hdev);
 err:
 	input_free_device(wdata->ir);
-	input_free_device(wdata->accel);
 	kfree(wdata);
 	return ret;
 }

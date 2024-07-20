@@ -146,7 +146,6 @@ struct wiimote_data {
 	struct input_dev *input;
 	struct work_struct rumble_worker;
 	struct led_classdev *leds[4];
-	struct input_dev *accel;
 	struct input_dev *ir;
 	struct power_supply *battery;
 	struct power_supply_desc battery_desc;
@@ -161,6 +160,9 @@ struct wiimote_data {
 	struct wiimote_queue queue;
 	struct wiimote_state state;
 	struct work_struct init_worker;
+
+	void (*in_keys) (struct wiimote_data *wdata, const __u8 *keys);
+	void (*in_accel) (struct wiimote_data *wdata, const __u8 *accel);
 };
 
 extern bool wiimote_dpad_as_analog;
@@ -194,9 +196,6 @@ struct wiimod_ops {
 		      struct wiimote_data *wdata);
 	void (*remove) (const struct wiimod_ops *ops,
 			struct wiimote_data *wdata);
-
-	void (*in_keys) (struct wiimote_data *wdata, const __u8 *keys);
-	void (*in_accel) (struct wiimote_data *wdata, const __u8 *accel);
 	void (*in_ir) (struct wiimote_data *wdata, const __u8 *ir, bool packed,
 		       unsigned int id);
 	void (*in_mp) (struct wiimote_data *wdata, const __u8 *mp);
@@ -267,7 +266,6 @@ extern void wiiproto_req_drm(struct wiimote_data *wdata, __u8 drm);
 extern void wiiproto_req_rumble(struct wiimote_data *wdata, __u8 rumble);
 extern void wiiproto_req_leds(struct wiimote_data *wdata, int leds);
 extern void wiiproto_req_status(struct wiimote_data *wdata);
-extern void wiiproto_req_accel(struct wiimote_data *wdata, __u8 accel);
 extern void wiiproto_req_ir1(struct wiimote_data *wdata, __u8 flags);
 extern void wiiproto_req_ir2(struct wiimote_data *wdata, __u8 flags);
 extern int wiimote_cmd_write(struct wiimote_data *wdata, __u32 offset,
