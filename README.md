@@ -1,21 +1,37 @@
-# Wiimote-2022 by gatopeich
+# Wiimote-2024 by gatopeich
 
 Tired of not being able to use your wiimote on Linux games out of the box?
-This driver update provides a Wiimote based gamepad directly usable as a standard game controller.
+This driver update provides a Wiimote gamepad directly usable as a standard game controller.
 It does so by combining Wiimote's buttons, accelerometer, and Nunchuk into a single input device.
 
-Use "gamepad=1" parameter to gather Wiimote and Nunchuk into a single device to be used as a
-gamepad per [Linux Gamepad Specification](https://www.kernel.org/doc/html/latest/input/gamepad.html)
+The Wiimote keys and accelerometer are combined into a single input device following the
+[Linux Gamepad Specification](https://www.kernel.org/doc/html/latest/input/gamepad.html)
 
-Otherwise with "gamepad=0" the old driver behaviour applies, with separate devices per function etc.
+Thus it can be used to play most games out of the box.
+
+# Analog D-PAD output based on tilt
+
+The D-PAD can be used like a joystick, automatically rotated depending on the Wiimote tilt.
 
 # Installation
 Install with "sudo dkms install ." from the folder with dkms.conf
 Otherwise, run "make" inside the src folder and load module manually before connecting by bluetooth:
 ```
-$ sudo modprobe -v ff-memless  # Dependency for rumble module
+$ sudo modprobe -v ff-memless  # Rumble module dependency
 $ sudo rmmod hid-wiimote; sudo insmod hid-wiimote.ko merge_nunchuck=1
 ```
+
+# Pairing on modern Bluetooth stacks
+In order for pairing to work on modern Bluetooth stacks, disable `ClassicBondedOnly` in `/etc/bluetooth/input.conf`:
+```
+# Limit HID connections to bonded devices
+# The HID Profile does not specify that devices must be bonded, however some
+# platforms may want to make sure that input connections only come from bonded
+# device connections. Several older mice have been known for not supporting
+# pairing/encryption.
+# Defaults to true for security.
+ClassicBondedOnly=false
+``` 
 
 **Remember to set param "merge_nunchuck=1" to have your nunchuck integrated**
 
@@ -23,8 +39,8 @@ $ sudo rmmod hid-wiimote; sudo insmod hid-wiimote.ko merge_nunchuck=1
 
 # TO-DO
 
-* [DONE] Linux layout
-* [...] "horizontal" layout ((no Nunchuk)
+* [WIP] Linux Gamepad layout (under rework for the latest kernels)
+* [...] Report Nunchuk in main input device
 * [...] PSX layout
 * [...] Steam layout
 * [...] MotionPlus support
@@ -77,7 +93,7 @@ Nunchuk Z     ~ BTN_ZL
 
 Horizontal Gamepad Mapping / two-handed:
 
-Wiimote D-Pad ~ BTN_DPAD_* (right is up)
+Wiimote D-Pad ~ BTN_DPAD_* (rotated depending on tilt)
 Wiimote A     ~ BTN_WEST (W)
 Wiimote B     ~ BTN_TL 
 Wiimote 1     ~ BTN_SOUTH enables gamepad detection
@@ -88,9 +104,12 @@ Wiimote +     ~ BTN_FORWARD
 Accelerometer ~ ABS_RX~Z
 Rumble        ~ FF_RUMBLE
 
-## Detection of horizontal position with Accelerator
-Note: Accel-X is -20% (~ -100) when Wiimote is horizontal with the D-pad to the left side,
-+20% (~=+100) when the D-pad is on the right side, centered ~ 0 when vertical
+
+## Detection of horizontal tilt with Accelerator
+Note: Accel-X is most negative when Wiimote is horizontal with the D-pad to the left side,
+and most positive when the D-pad is on the right side, centered ~ 0 when vertical (single handed).
+
+This is detected automatically and affects the orientation of D-PAD's analog axis (ABS_X and ABS_Y).
 ```
 .------------------------------------.
 ¦   _│^│_           (+)            . ¦ Accel-X ~ -20%
@@ -104,11 +123,12 @@ Note: Accel-X is -20% (~ -100) when Wiimote is horizontal with the D-pad to the 
 ¦ ·              (+)          |_|    ¦ Accel-Z ~   0
 `------------------------------------´
 ```
-Accel-Z detects up-down movement of the frontside, up being negative.
+
+Accel-Z detects up-down movement of the Wiimote's tip, up being negative.
 It is Zero when vertical, +20% when wiimote sits on a table facing up, -20% facing down
 
 
-# Playstation layout
+# Playstation layout notes for work in progress
 
 - Left Joy-X = ABS_X => Nunchuk Joy-X
 - Left Joy-Y = ABS_Y => Nunchuk Joy-Y
@@ -137,9 +157,8 @@ It is Zero when vertical, +20% when wiimote sits on a table facing up, -20% faci
 - BTN_THUMBR, ds_report->buttons[1] & DS_BUTTONS1_R3
 - BTN_MODE,   ds_report->buttons[2] & DS_BUTTONS2_PS_HOME
 
-# Steam layout
 
-**TO BE DONE!**
+# Steam layout notes for future work
 
 ![Steam controller upside](http://fortressofdoors.com/content/images/2016/10/devdays2016_34.jpg)
 ![Steam controller downside](http://fortressofdoors.com/content/images/2016/10/devdays2016_35.jpg)

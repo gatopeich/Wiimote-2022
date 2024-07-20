@@ -139,6 +139,9 @@ struct wiimote_state {
 	__s16 calib_pro_sticks[4];
 	__u8 pressure_drums[7];
 	__u8 cache_rumble;
+	struct {
+		__u16 x[2], y[2], z[2];
+	} accel_minmax;
 };
 
 struct wiimote_data {
@@ -188,6 +191,9 @@ enum wiimod_module {
 #define WIIMOD_FLAG_INPUT		0x0001
 #define WIIMOD_FLAG_EXT8		0x0002
 #define WIIMOD_FLAG_EXT16		0x0004
+#define WIIMOD_FLAG_TILT_LEFT		0x0008
+#define WIIMOD_FLAG_TILT_RIGHT		0x0010
+#define WIIMOD_FLAG_TILT		(WIIMOD_FLAG_TILT_LEFT|WIIMOD_FLAG_TILT_RIGHT)
 
 struct wiimod_ops {
 	__u16 flags;
