@@ -106,27 +106,45 @@ Rumble        ~ FF_RUMBLE
 
 
 ## Detection of horizontal tilt with Accelerator
-Note: Accel-X is most negative when Wiimote is horizontal with the D-pad to the left side,
-and most positive when the D-pad is on the right side, centered ~ 0 when vertical (single handed).
-
-This is detected automatically and affects the orientation of D-PAD's analog axis (ABS_X and ABS_Y).
+In a static Wiimote, Accel-X relates directly to the orientation of the D-PAD.
+I have taken some accelerometer measurements with an old Wiimote resting horizontally on its sides:
 ```
 .------------------------------------.
-¦   _│^│_           (+)            . ¦ Accel-X ~ -20%
-¦  |_   _|   (A)    (H)    (1) (2) : ¦ Accel-Y ~ +15%
-¦⊝   |_|            (-)            · ¦ Accel-Z ~   0
+¦   _│^│_           (+)            . ¦ Accel-X ~ -142 (static minimum)
+¦  |_   _|   (A)    (H)    (1) (2) : ¦ Accel-Y ~  -45
+¦⊝   |_|            (-)            · ¦ Accel-Z ~  -34
 `------------------------------------´
 
 .------------------------------------.
-¦ .              (-)         _│^│_  ⊝¦ Accel-X ~ +20%
-¦ : (2) (1)      (H)   (A)  |_   _|  ¦ Accel-Y ~ +15%
-¦ ·              (+)          |_|    ¦ Accel-Z ~   0
+¦ .              (-)         _│^│_  ⊝¦ Accel-X ~  +46  (static maximum)
+¦ : (2) (1)      (H)   (A)  |_   _|  ¦ Accel-Y ~  -40
+¦ ·              (+)          |_|    ¦ Accel-Z ~  -35
 `------------------------------------´
 ```
+Note that the full range for thg 3 axis is -512 ~ +511, the device must be whacked hard to reach limits.
 
-Accel-Z detects up-down movement of the Wiimote's tip, up being negative.
-It is Zero when vertical, +20% when wiimote sits on a table facing up, -20% facing down
+When the Wiimote is held strictly upright, and on not so strictly on a relaxing hand:
+```
+      ,-.                                   ,-
+      | | Accel-X ~  -44                    \ \   Accel-X ~  -50
+     /| | Accel-Y ~ -136 (static minimum)    \ \  Accel-Y ~ -129
+     Y  | Accel-Z ~  -36                     L| \ Accel-Z  ==  0
+     |  |                                     |  \
+     |  |                                      \  \
+     |  |                                       \  \
+     |  |                                        \_/
+     `--'                
+```
 
+
+Accel-Z feels up-down acceleratio of the Wiimote's tip, plus gravity in that direction.
+It is typically +59 (static maximum) when my Wiimote sits on a table facing up, -132 facing down (static minimum),
+-36 in straight vertical position, and zero when held upright with the slight forward tilt of a relaxed hand.
+
+The static zero for X and Y axis happens in awkward position on my old Wiimote, perhaps it does not
+represent of typical values for other Wiimotes.
+
+The static maximums and minimums are due to gravity. Measuring near sea level, in mild temperature.
 
 # Playstation layout notes for work in progress
 

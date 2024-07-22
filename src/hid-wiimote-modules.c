@@ -119,6 +119,7 @@ static int wiimod_keys_probe(const struct wiimod_ops *ops,
 		set_bit(wiimod_keys_map[i], wdata->input->keybit);
 
 	// Prepare analog axis for D-pad
+	// TODO: Report this only if nunchuck not available
 	set_bit(EV_ABS, wdata->input->evbit);
 	for (axis = ABS_X; axis <= ABS_Y; axis++) {
 		set_bit(axis, wdata->input->absbit);
@@ -456,7 +457,7 @@ static const struct wiimod_ops wiimod_leds[4] = {
 static void wiimod_accel_in_accel(struct wiimote_data *wdata,
 				  const __u8 *accel)
 {
-	int x, y, z, x_range;
+	int x, y, z;
 
 	/*
 	 * payload is: BB BB XX YY ZZ
@@ -470,48 +471,28 @@ static void wiimod_accel_in_accel(struct wiimote_data *wdata,
 	 * 0x200 is returned on no movement.
 	 */
 
-	x = accel[2] << 2;
-	y = accel[3] << 2;
-	z = accel[4] << 2;
+	x = (accel[2] << 2) | ((accel[0] >> 5) & 0x3);
+	y = (accel[3] << 2) | ((accel[1] >> 4) & 0x2);
+	z = (accel[4] << 2) | ((accel[1] >> 5) & 0x2);
 
-	x |= (accel[0] >> 5) & 0x3;
-	y |= (accel[1] >> 4) & 0x2;
-	z |= (accel[1] >> 5) & 0x2;
-
-	#define accel_min_max(X) \
-		X -= 0x200; \
-		if (X < wdata->state.accel_minmax.X[0]) { \
-			pr_warn("New min accel-" #X ": %d\n", X); \
-			wdata->state.accel_minmax.X[0] = X; } \
-		else if (X > wdata->state.accel_minmax.X[1]) { \
-			pr_warn("New max accel-" #X ": %d\n", X); \
-			wdata->state.accel_minmax.X[1] = X; }
-	accel_min_max(x);
-	accel_min_max(y);
-	accel_min_max(z);
+	// Center around middle point of the range
+	x -= 0x200;
+	y -= 0x200;
+	z -= 0x200;
 
 	// Calculate D-PAD orientation
-	x_range = wdata->state.accel_minmax.x[1] - wdata->state.accel_minmax.x[0];
-	if (x_range) {
-		int x10 = (x - wdata->state.accel_minmax.x[0]) * 10 / x_range;
-		if (wdata->state.flags & WIIMOD_FLAG_TILT_LEFT) {
-			if (x10 >= 5) {
-				wdata->state.flags &= ~WIIMOD_FLAG_TILT;
-				pr_warn("Wiimote turned up, D-PAD UP remains UP");
-			}
-		} else if (wdata->state.flags & WIIMOD_FLAG_TILT_RIGHT) {
-			if (x10 < 5)  {
-				wdata->state.flags &= ~WIIMOD_FLAG_TILT;
-				pr_warn("Wiimote turned up, D-PAD UP remains UP");
-			}
-		} else {  // Default tilt, Wiimote held vertically
-			if (x10 < 3) {
-				wdata->state.flags |= WIIMOD_FLAG_TILT_LEFT;
-				pr_warn("Wiimote turned left, D-PAD UP becomes LEFT");
-			} else if (x10 > 7) {
-				wdata->state.flags |= WIIMOD_FLAG_TILT_RIGHT;
-				pr_warn("Wiimote turned right, D-PAD UP becomes RIGHT");
-			}
+	if (wdata->state.flags & WIIMOD_FLAG_TILT) {
+		if (y < -100) {
+			pr_warn("Wiimote seems to be upright, reseting D-PAD orientation");
+			wdata->state.flags &= ~WIIMOD_FLAG_TILT;
+		}
+	} else {  // Default tilt, Wiimote held vertically
+		if (x < -130) {
+			wdata->state.flags |= WIIMOD_FLAG_TILT_LEFT;
+			pr_warn("Looks like D-PAD's UP points LEFT");
+		} else if (x > 30) {
+			wdata->state.flags |= WIIMOD_FLAG_TILT_RIGHT;
+			pr_warn("Looks like D-PAD's UP points RIGHT");
 		}
 	}
 

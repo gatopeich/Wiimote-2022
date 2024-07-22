@@ -139,9 +139,6 @@ struct wiimote_state {
 	__s16 calib_pro_sticks[4];
 	__u8 pressure_drums[7];
 	__u8 cache_rumble;
-	struct {
-		__u16 x[2], y[2], z[2];
-	} accel_minmax;
 };
 
 struct wiimote_data {
