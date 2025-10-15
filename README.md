@@ -10,14 +10,42 @@ gamepad per [Linux Gamepad Specification](https://www.kernel.org/doc/html/latest
 Otherwise with "gamepad=0" the old driver behaviour applies, with separate devices per function etc.
 
 # Installation
-Install with "sudo dkms install ." from the folder with dkms.conf
-Otherwise, run "make" inside the src folder and load module manually before connecting by bluetooth:
-```
-$ sudo modprobe -v ff-memless
-$ sudo rmmod hid-wiimote; sudo insmod hid-wiimote.ko gamepad=1
+
+## Quick Install (Recommended)
+
+We provide automated installation scripts that handle everything including making `gamepad=1` persistent across reboots:
+
+**Ubuntu / Linux Mint / Debian:**
+```bash
+sudo bash install-ubuntu.sh
 ```
 
-**Don't forget to set param "gamepad=1" to take advantage of the new features in this driver!**
+**Arch Linux:**
+```bash
+sudo bash install-arch.sh
+```
+
+## Manual Installation
+
+For detailed manual installation instructions and troubleshooting, see **[INSTALL.md](INSTALL.md)**.
+
+### Quick Manual Install with DKMS:
+```bash
+sudo dkms install .
+# Make gamepad=1 persistent:
+sudo bash -c 'echo "options hid-wiimote gamepad=1" > /etc/modprobe.d/hid-wiimote.conf'
+sudo modprobe hid-wiimote
+```
+
+### Development/Testing (without DKMS):
+```bash
+cd src
+make
+sudo modprobe -v ff-memless
+sudo rmmod hid-wiimote; sudo insmod hid-wiimote.ko gamepad=1
+```
+
+**Important:** To make `gamepad=1` persistent across reboots, you must create the modprobe configuration file as shown above. See [INSTALL.md](INSTALL.md) for details.
 
 ![Screenshot](Screenshot.png)
 
