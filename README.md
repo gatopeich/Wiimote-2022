@@ -9,6 +9,12 @@ gamepad per [Linux Gamepad Specification](https://www.kernel.org/doc/html/latest
 
 Otherwise with "gamepad=0" the old driver behaviour applies, with separate devices per function etc.
 
+## 📚 Documentation
+
+- **[Quick Start Guide](QUICKSTART.md)** - Get up and running in minutes
+- **[Arch/Manjaro Installation](INSTALL-ARCH.md)** - Detailed guide for Arch-based distributions
+- **[Troubleshooting](TROUBLESHOOTING.md)** - Solutions to common issues
+
 # Installation
 
 ## Quick Installation
