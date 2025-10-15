@@ -19,6 +19,31 @@ $ sudo rmmod hid-wiimote; sudo insmod hid-wiimote.ko gamepad=1
 
 **Don't forget to set param "gamepad=1" to take advantage of the new features in this driver!**
 
+## Module Parameters
+
+- `gamepad=1` - Enable Linux Gamepad Specification layout (combines Wiimote and Nunchuk into single device)
+- `dpad_as_analog=1` - Use D-Pad as main analog input
+- `flip_nunchuk_x=1` - Flip Nunchuk joystick X axis (left/right)
+- `flip_nunchuk_y=1` - Flip Nunchuk joystick Y axis (up/down)
+- `flip_nunchuk_accel_x=1` - Flip Nunchuk accelerometer X axis
+- `flip_nunchuk_accel_y=1` - Flip Nunchuk accelerometer Y axis
+- `flip_nunchuk_accel_z=1` - Flip Nunchuk accelerometer Z axis (vertical)
+
+### Axis Flip Configuration
+
+If you experience inverted axes with your Nunchuk (e.g., pushing up moves down in games), you can use the flip parameters to correct this:
+
+```bash
+# Example: Fix inverted up/down axis
+sudo rmmod hid-wiimote
+sudo insmod hid-wiimote.ko gamepad=1 flip_nunchuk_y=1
+```
+
+The driver will log the current axis flip settings to dmesg/syslog when the Wiimote is connected. You can check the current settings with:
+```bash
+dmesg | grep "Axis flip"
+```
+
 ![Screenshot](Screenshot.png)
 
 # TO-DO
