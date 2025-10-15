@@ -10,14 +10,45 @@ gamepad per [Linux Gamepad Specification](https://www.kernel.org/doc/html/latest
 Otherwise with "gamepad=0" the old driver behaviour applies, with separate devices per function etc.
 
 # Installation
-Install with "sudo dkms install ." from the folder with dkms.conf
-Otherwise, run "make" inside the src folder and load module manually before connecting by bluetooth:
+
+## Quick Installation
+
+### For Arch Linux, Manjaro, and AUR-based distributions:
+See **[INSTALL-ARCH.md](INSTALL-ARCH.md)** for detailed instructions, or use the automated script:
+```bash
+sudo ./install-arch.sh
 ```
-$ sudo modprobe -v ff-memless
-$ sudo rmmod hid-wiimote; sudo insmod hid-wiimote.ko gamepad=1
+
+### For Ubuntu, Debian, and other distributions:
+
+Install with DKMS (recommended):
+```bash
+sudo dkms install .
+```
+
+Then load the module:
+```bash
+sudo modprobe ff-memless
+sudo modprobe hid-wiimote gamepad=1
+```
+
+### Manual Installation (Development/Testing)
+
+Run "make" inside the src folder and load module manually before connecting by bluetooth:
+```bash
+cd src
+make
+sudo modprobe -v ff-memless
+sudo rmmod hid-wiimote; sudo insmod hid-wiimote.ko gamepad=1
 ```
 
 **Don't forget to set param "gamepad=1" to take advantage of the new features in this driver!**
+
+## Important Notes
+
+- After DKMS installation, the module is installed system-wide. Use `modprobe hid-wiimote gamepad=1` to load it, NOT `insmod` with a local .ko file.
+- The module must be loaded with `gamepad=1` parameter BEFORE connecting your Wiimote.
+- For persistent configuration across reboots, see [INSTALL-ARCH.md](INSTALL-ARCH.md) for instructions.
 
 ![Screenshot](Screenshot.png)
 
