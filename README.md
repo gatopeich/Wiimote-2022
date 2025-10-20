@@ -9,6 +9,12 @@ gamepad per [Linux Gamepad Specification](https://www.kernel.org/doc/html/latest
 
 Otherwise with "gamepad=0" the old driver behaviour applies, with separate devices per function etc.
 
+## 📚 Documentation
+
+- **[Quick Start Guide](QUICKSTART.md)** - Get up and running in minutes
+- **[Arch/Manjaro Installation](INSTALL-ARCH.md)** - Detailed guide for Arch-based distributions
+- **[Troubleshooting](TROUBLESHOOTING.md)** - Solutions to common issues
+
 # Installation
 
 ## Quick Install (Recommended)
@@ -71,6 +77,12 @@ The driver will log the current axis flip settings to dmesg/syslog when the Wiim
 ```bash
 dmesg | grep "Axis flip"
 ```
+
+## Important Notes
+
+- After DKMS installation, the module is installed system-wide. Use `modprobe hid-wiimote gamepad=1` to load it, NOT `insmod` with a local .ko file.
+- The module must be loaded with `gamepad=1` parameter BEFORE connecting your Wiimote.
+- For persistent configuration across reboots, see [INSTALL-ARCH.md](INSTALL-ARCH.md) for instructions.
 
 ![Screenshot](Screenshot.png)
 
