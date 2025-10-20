@@ -880,6 +880,12 @@ static void wiimod_nunchuk_in_ext(struct wiimote_data *wdata, const __u8 *ext)
 	bx -= 128;
 	by -= 128;
 
+	/* Apply axis flipping for joystick */
+	if (wiimote_flip_nunchuk_x)
+		bx = -bx;
+	if (wiimote_flip_nunchuk_y)
+		by = -by;
+
 	x = ext[2] << 2;
 	y = ext[3] << 2;
 	z = ext[4] << 2;
@@ -898,6 +904,14 @@ static void wiimod_nunchuk_in_ext(struct wiimote_data *wdata, const __u8 *ext)
 	x -= 0x200;
 	y -= 0x200;
 	z -= 0x200;
+
+	/* Apply axis flipping for accelerometer */
+	if (wiimote_flip_nunchuk_accel_x)
+		x = -x;
+	if (wiimote_flip_nunchuk_accel_y)
+		y = -y;
+	if (wiimote_flip_nunchuk_accel_z)
+		z = -z;
 
 	// Report stick in the first 2 axis ~ main control in standard games
 	input_report_abs(wdata->extension.input, wiimote_gamepad?ABS_X:ABS_HAT0X, bx);

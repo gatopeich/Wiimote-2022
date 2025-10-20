@@ -162,6 +162,11 @@ struct wiimote_data {
 
 extern bool wiimote_dpad_as_analog;
 extern bool wiimote_gamepad;
+extern bool wiimote_flip_nunchuk_x;
+extern bool wiimote_flip_nunchuk_y;
+extern bool wiimote_flip_nunchuk_accel_x;
+extern bool wiimote_flip_nunchuk_accel_y;
+extern bool wiimote_flip_nunchuk_accel_z;
 
 /* wiimote modules */
 
