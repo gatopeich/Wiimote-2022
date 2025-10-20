@@ -1834,6 +1834,14 @@ static int wiimote_hid_probe(struct hid_device *hdev,
 
 	hid_info(hdev, "New device registered\n");
 
+	/* Log axis flip configuration */
+	hid_info(hdev, "Axis flip settings: Nunchuk X=%s Y=%s AccelX=%s AccelY=%s AccelZ=%s\n",
+		wiimote_flip_nunchuk_x ? "flipped" : "normal",
+		wiimote_flip_nunchuk_y ? "flipped" : "normal",
+		wiimote_flip_nunchuk_accel_x ? "flipped" : "normal",
+		wiimote_flip_nunchuk_accel_y ? "flipped" : "normal",
+		wiimote_flip_nunchuk_accel_z ? "flipped" : "normal");
+
 	/* schedule device detection */
 	wiimote_schedule(wdata);
 
@@ -1879,6 +1887,26 @@ MODULE_PARM_DESC(dpad_as_analog, "Use D-Pad as main analog input");
 bool wiimote_gamepad = true;
 module_param_named(gamepad, wiimote_gamepad, bool, 0644);
 MODULE_PARM_DESC(gamepad, "Layout for Linux Gamepad Specification");
+
+bool wiimote_flip_nunchuk_x = false;
+module_param_named(flip_nunchuk_x, wiimote_flip_nunchuk_x, bool, 0644);
+MODULE_PARM_DESC(flip_nunchuk_x, "Flip Nunchuk joystick X axis");
+
+bool wiimote_flip_nunchuk_y = false;
+module_param_named(flip_nunchuk_y, wiimote_flip_nunchuk_y, bool, 0644);
+MODULE_PARM_DESC(flip_nunchuk_y, "Flip Nunchuk joystick Y axis");
+
+bool wiimote_flip_nunchuk_accel_x = false;
+module_param_named(flip_nunchuk_accel_x, wiimote_flip_nunchuk_accel_x, bool, 0644);
+MODULE_PARM_DESC(flip_nunchuk_accel_x, "Flip Nunchuk accelerometer X axis");
+
+bool wiimote_flip_nunchuk_accel_y = false;
+module_param_named(flip_nunchuk_accel_y, wiimote_flip_nunchuk_accel_y, bool, 0644);
+MODULE_PARM_DESC(flip_nunchuk_accel_y, "Flip Nunchuk accelerometer Y axis");
+
+bool wiimote_flip_nunchuk_accel_z = false;
+module_param_named(flip_nunchuk_accel_z, wiimote_flip_nunchuk_accel_z, bool, 0644);
+MODULE_PARM_DESC(flip_nunchuk_accel_z, "Flip Nunchuk accelerometer Z axis");
 
 MODULE_DEVICE_TABLE(hid, wiimote_hid_devices);
 

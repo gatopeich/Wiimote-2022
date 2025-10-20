@@ -1,5 +1,5 @@
 #!/bin/bash
-# Wiimote-2022 Installation Script for Arch Linux
+# Wiimote-2022 Installation Script for Ubuntu/Debian/Linux Mint
 # This script installs the hid-wiimote driver with gamepad=1 parameter persistent across reboots
 
 set -e  # Exit on error
@@ -18,7 +18,7 @@ fi
 
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}Wiimote-2022 Installation Script${NC}"
-echo -e "${GREEN}For Arch Linux${NC}"
+echo -e "${GREEN}For Ubuntu/Debian/Linux Mint${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
 
@@ -34,7 +34,8 @@ fi
 
 # Step 1: Install dependencies
 echo -e "${YELLOW}Step 1: Installing dependencies...${NC}"
-pacman -Sy --noconfirm dkms linux-headers base-devel
+apt-get update
+apt-get install -y dkms linux-headers-$(uname -r) build-essential
 
 # Step 2: Remove old installation if exists
 echo -e "${YELLOW}Step 2: Checking for previous installation...${NC}"
@@ -60,16 +61,12 @@ MODPROBE_CONF="/etc/modprobe.d/hid-wiimote.conf"
 echo "options hid-wiimote gamepad=1" > "$MODPROBE_CONF"
 echo "Created configuration file: $MODPROBE_CONF"
 
-# Step 5: Update initramfs
-echo -e "${YELLOW}Step 5: Updating initramfs...${NC}"
-mkinitcpio -P
-
-# Step 6: Load the module
-echo -e "${YELLOW}Step 6: Loading hid-wiimote module...${NC}"
+# Step 5: Load the module
+echo -e "${YELLOW}Step 5: Loading hid-wiimote module...${NC}"
 modprobe hid-wiimote
 
-# Step 7: Verify installation
-echo -e "${YELLOW}Step 7: Verifying installation...${NC}"
+# Step 6: Verify installation
+echo -e "${YELLOW}Step 6: Verifying installation...${NC}"
 if lsmod | grep -q "hid_wiimote"; then
     echo -e "${GREEN}✓ Module loaded successfully${NC}"
 else
@@ -102,7 +99,7 @@ echo "2. If you have a Nunchuk, connect it to the Wiimote"
 echo "3. The device should appear as a standard gamepad (e.g., /dev/input/js0)"
 echo ""
 echo "To test your gamepad, you can use:"
-echo "  sudo pacman -S joyutils"
+echo "  sudo apt-get install joystick"
 echo "  jstest /dev/input/js0"
 echo ""
 echo "Configuration files created:"
